@@ -13,6 +13,19 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node api1.js"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Quentin DEBOVE",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qdebove/My_First_Game.git"
+  },
+  "keywords": [
+    "game",
+    "card_game",
+    "battle_card_game"
+  ],
+  "bugs": {
+    "url": "https://github.com/qdebove/My_First_Game/issues"
+  },
+  "homepage": "https://github.com/qdebove/My_First_Game#readme"
 }
