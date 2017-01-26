@@ -1,12 +1,12 @@
 ** Sorry, English is not my native language **
 
-NEWS : Now, the client side is jQuery free, so VanillaJS will not worked on all browser (for example, see http://caniuse.com/#search=event for event...);
+NEWS : Now, the client side is jQuery free, so VanillaJS will not worked on all browser (for example, see http://caniuse.com/#search=event for event...).
 
 # My First Game
 
 ## I. Introduction
 
-My first game, created without any refactoring. Using jQuery and old JS without good graphics ! --> Not now ^^
+My first game, created without any refactoring. Using jQuery and old JS without good graphics ! --> Not now ^^.
 
 ## II. Biography
 
