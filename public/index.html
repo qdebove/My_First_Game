@@ -2,39 +2,65 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./style/style.css">
     <title>Règles du jeux</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/annyang/2.6.0/annyang.min.js"></script>
   </head>
 
   <body>
-    <header>
-      <nav>
-        <a href="jeux1.html">Présentation</a>
-        <a href="personnal.html">Qui suis-je ?</a>
-      </nav>
-    </header>
-
-    <div>
+    <div class="mainContent">
       <section class="handbot"></section>
+
       <section class="plateau">
-        <aside class="pioche">
-          <figure>
-            <img src="/images/verso_carte.jpg">
+        
+        <aside class="pioches">
+
+          <figure class="pioche">
+            
+            <figcaption>
+              <img src="./images/verso_carte.jpg">
+              <p>Cartes restantes</p>
+              </figcaption>
+
           </figure>
-          <figure></figure>
+
+          <figure class="cimetiere">
+            <p>Cliquez ici pour voir la défausse</p>
+          </figure>
+
         </aside>
-        <main></main>
-        <aside class="score">
-          <h1>Joueur</h1>
-          <h1>Bot</h1>
-          <h2>Effet en cours pour le joueur</h2>
-          <h2>Effet en cours pour le bot</h2>
+
+        <main class="areaOfGame"></main>
+
+        <aside class="scoreAndEffect">
+
+          <div class="playerScore">
+            <h1>Joueur</h1>
+            <p>0</p>
+          </div>
+
+          <div class="botScore">
+            <h1>Bot</h1>
+            <p>0</p>
+          </div>
+
+          <div class="playerEffect">
+            <h2>Effet en cours pour le joueur</h2>
+            <p>0</p>
+          </div>
+
+          <div class="botEffect">
+            <h2>Effet en cours pour le bot</h2>
+            <p>0</p>
+          </div>
+
         </aside>
+
       </section>
+
       <section class="handplayer"></section>
+
     </div>
+
     <script src="game.js"></script>
   </body>
 </html>

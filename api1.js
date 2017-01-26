@@ -1,13 +1,13 @@
-var request = require("request");
-var express = require("express");
-var bodyParser = require("body-parser");
-var querystring = require("querystring");
-var shuffle = require("./shuffleArray.js");
-var maleOrFemale = require("./maleOrFemale.js");
-var fullDeck = require("./fullDeck.json");
-var app = express();
-var games = [];
-var totalGamesLaunched = 0;
+let request = require("request");
+let express = require("express");
+let bodyParser = require("body-parser");
+let querystring = require("querystring");
+let shuffle = require("./shuffleArray.js");
+let maleOrFemale = require("./maleOrFemale.js");
+let fullDeck = require("./fullDeck.json");
+let app = express();
+let games = [];
+let totalGamesLaunched = 0;
 
 
 app.use(express.static("public"));
@@ -19,27 +19,32 @@ function reset() {
 }
 
 function cardDescription(gameNumber) {
-  var le = "il";
-  var un = "un";
-  var bonus = gameNumber.bonus;
-  var power = maleOrFemale(gameNumber.power, le) + gameNumber.power;
-  var weak = maleOrFemale(gameNumber.weak, le) + gameNumber.weak;
-  var card_description = "<article><p>Cette arme est" + maleOrFemale(gameNumber.suit, un) + gameNumber.suit + " qui ";
-  var power_weakness = "Cette arme est forte contre" + power + " mais perd contre" + weak + ".</p><p>Fermer la fenêtre</p><p>Jouer la carte</p></article>";
-  var result_bonus;
+  let le = "il";
+  let un = "un";
+  let bonus = gameNumber.bonus;
+  let power = maleOrFemale(gameNumber.power, le) + gameNumber.power;
+  let weak = maleOrFemale(gameNumber.weak, le) + gameNumber.weak;
+  let card_description = "Cette arme est" + maleOrFemale(gameNumber.suit, un) + gameNumber.suit + " qui ";
+  let power_weakness = "Cette arme est forte contre" + power + " mais perd contre" + weak + ".";
+  let result_bonus;
   if(bonus < 0) {
-    result_bonus = "donne un malus de " + bonus + " au prochain tour.<br>";
+    result_bonus = "donne un malus de " + bonus + " au prochain tour.";
   } else if(bonus === 0) {
-    result_bonus = "ne donne ni bonus ni malus au prochain tour.<br>";
+    result_bonus = "ne donne ni bonus ni malus au prochain tour.";
   } else {
-    result_bonus = "donne un bonus de " + bonus + " au prochain tour.<br>";
+    result_bonus = "donne un bonus de " + bonus + " au prochain tour.";
   }
-  var finalResult = card_description + result_bonus + power_weakness;
+  let finalResult = {
+    description: card_description + result_bonus,
+    power_weakness: power_weakness,
+    action1: "Fermer la fenêtre",
+    action2: "Jouer la carte"
+  }
   return finalResult;
 }
 
 function effect(victoire, gameNumber) {
-    var effects;
+    let effects;
     if (victoire) {
         effects = effectCalc(gameNumber.cardsPlayed.player.bonus, gameNumber.cardsPlayed.bot.bonus);
         gameNumber.futureEffect.player = effects.winner;
@@ -52,7 +57,7 @@ function effect(victoire, gameNumber) {
 }
 
 function effectCalc(bonusWinner, bonusLooser) {
-    var effects = {};
+    let effects = {};
     if (bonusWinner < 0 && bonusLooser >= 0) {
         effects.winner = bonusWinner;
         effects.looser = bonusLooser;
@@ -70,22 +75,22 @@ function effectCalc(bonusWinner, bonusLooser) {
 }
 
 function outcome(gameNumber) {
-    var powerPlayer = gameNumber.cardsPlayed.player.power;
-    var pointsPlayer = gameNumber.cardsPlayed.player.points;
-    var weakPlayer = gameNumber.cardsPlayed.player.weak;
-    var weakBot = gameNumber.cardsPlayed.bot.weak;
-    var pointsBot = gameNumber.cardsPlayed.bot.points;
-    var powerBot = gameNumber.cardsPlayed.bot.power;
-    var suitPlayer = gameNumber.cardsPlayed.player.suit;
-    var suitBot = gameNumber.cardsPlayed.bot.suit;
-    var totalPuissancePlayer = gameNumber.cardsPlayed.player.value + gameNumber.scoreEffect.player.effect;
-    var totalPuissanceBot = gameNumber.cardsPlayed.bot.value + gameNumber.scoreEffect.bot.effect;
-    var le = "il";
-    var un = "un";
-    var playerCard = maleOrFemale(suitPlayer, un) + suitPlayer;
-    var botCard = maleOrFemale(suitBot, un) + suitBot;
-    var result = "<p> Vous avez joué" + playerCard + ".<br>Votre adversaire a joué" + botCard + ".</p>";
-    var winOrLoose;
+    let powerPlayer = gameNumber.cardsPlayed.player.power;
+    let pointsPlayer = gameNumber.cardsPlayed.player.points;
+    let weakPlayer = gameNumber.cardsPlayed.player.weak;
+    let weakBot = gameNumber.cardsPlayed.bot.weak;
+    let pointsBot = gameNumber.cardsPlayed.bot.points;
+    let powerBot = gameNumber.cardsPlayed.bot.power;
+    let suitPlayer = gameNumber.cardsPlayed.player.suit;
+    let suitBot = gameNumber.cardsPlayed.bot.suit;
+    let totalPuissancePlayer = gameNumber.cardsPlayed.player.value + gameNumber.scoreEffect.player.effect;
+    let totalPuissanceBot = gameNumber.cardsPlayed.bot.value + gameNumber.scoreEffect.bot.effect;
+    let le = "il";
+    let un = "un";
+    let playerCard = maleOrFemale(suitPlayer, un) + suitPlayer;
+    let botCard = maleOrFemale(suitBot, un) + suitBot;
+    let result = "<p> Vous avez joué" + playerCard + ".<br>Votre adversaire a joué" + botCard + ".</p>";
+    let winOrLoose;
     if (suitPlayer === suitBot) {
         if (totalPuissancePlayer > totalPuissanceBot) {
             gameNumber.scoreEffect.player.score += (pointsPlayer + pointsBot);
@@ -109,13 +114,13 @@ function outcome(gameNumber) {
         effect(false, gameNumber);
         winOrLoose = "<p>Vous avez perdu, votre " + suitPlayer + " est faible contre" + maleOrFemale(suitBot, le) + suitBot + " de votre adversaire.</p>";
     }
-    var finalResult = result + winOrLoose;
+    let finalResult = result + winOrLoose;
     return finalResult;
 }
 
 app.get("/newGame", function(request, response) {
   totalGamesLaunched += 1;
-  var currentGame = +totalGamesLaunched - 1;
+  let currentGame = +totalGamesLaunched - 1;
   games[currentGame] = {
     playerHand: {
         quantity: 0,
@@ -153,7 +158,7 @@ app.get("/newGame", function(request, response) {
   };
 
   shuffle(fullDeck);
-  for (var i = 0; i < fullDeck.length; i ++) {
+  for (let i = 0; i < fullDeck.length; i ++) {
     games[currentGame].deck.push(fullDeck[i]);
   }
   games[currentGame].remaining = games[currentGame].deck.length;
@@ -162,15 +167,15 @@ app.get("/newGame", function(request, response) {
 });
 
 app.get("/:serial/playerdraw", function(request, response) {
-  var currentGame = games[+request.params.serial - 1];
-  var querystring_quantity = request.query.quantity;
+  let currentGame = games[+request.params.serial - 1];
+  let querystring_quantity = request.query.quantity;
   if(request.params.serial === 0 || request.params.serial > games.length) {
     console.log("Partie numéro " + currentGame.game_id + " non trouvée, pioche impossible !");
     response.end();
   } else {
     currentGame.scoreEffect.player.effect = currentGame.futureEffect.player;
     currentGame.futureEffect.player;
-    var cardToSend = {
+    let cardToSend = {
       cards: [],
       remaining: 0,
       effect: currentGame.scoreEffect.player.effect
@@ -182,8 +187,8 @@ app.get("/:serial/playerdraw", function(request, response) {
     shuffle(currentGame.deck);
     if((+currentGame.playerHand.cards.length + +querystring_quantity) <= 3) {
       if(currentGame.deck.length !== 0) {
-        for (var i = 0; i < querystring_quantity; i ++) {
-          var currentCard = currentGame.deck.shift();
+        for (let i = 0; i < querystring_quantity; i ++) {
+          let currentCard = currentGame.deck.shift();
           cardToSend.cards.push(currentCard);
           currentGame.playerHand.cards.push(currentCard);
         };
@@ -203,15 +208,15 @@ app.get("/:serial/playerdraw", function(request, response) {
 });
 
 app.get("/:serial/botdraw", function(request, response) {
-  var currentGame = games[+request.params.serial - 1];
-  var querystring_quantity = request.query.quantity;
+  let currentGame = games[+request.params.serial - 1];
+  let querystring_quantity = request.query.quantity;
   if(request.params.serial === 0 || request.params.serial > games.length) {
     console.log("Partie numéro " + currentGame.game_id + " non trouvée, pioche impossible !");
     response.end();
   } else {
     currentGame.scoreEffect.bot.effect = currentGame.futureEffect.bot;
     currentGame.futureEffect.bot;
-    var cardToSend = {
+    let cardToSend = {
       cards: [],
       remaining: 0,
       effect: currentGame.scoreEffect.bot.effect
@@ -223,8 +228,8 @@ app.get("/:serial/botdraw", function(request, response) {
     shuffle(currentGame.deck);
     if((+currentGame.botHand.cards.length + +querystring_quantity) <= 3) {
       if(currentGame.deck.length !== 0) {
-        for (var i = 0; i < querystring_quantity; i ++) {
-          var currentCard = currentGame.deck.shift();
+        for (let i = 0; i < querystring_quantity; i ++) {
+          let currentCard = currentGame.deck.shift();
           cardToSend.cards.push(currentCard);
           currentGame.botHand.cards.push(currentCard);
         };
@@ -244,8 +249,8 @@ app.get("/:serial/botdraw", function(request, response) {
 });
 
 app.get("/:serial/cardinformation", function(request, response) {
-  var currentGame = games[+request.params.serial - 1];
-  var querystring_card = request.query.card;
+  let currentGame = games[+request.params.serial - 1];
+  let querystring_card = request.query.card;
   if(request.params.serial === 0 || request.params.serial > games.length) {
     console.log("Partie numéro " + currentGame.game_id + " non trouvée, pioche impossible !");
     response.end();
@@ -254,10 +259,9 @@ app.get("/:serial/cardinformation", function(request, response) {
       console.log("Impossible d'afficher les informations, la main est vide pour la partie numéro " + currentGame.game_id + ".");
       response.end();
     } else {
-      console.log(currentGame.playerHand.cards);
-      var x = 0;
-      for (var i = 0; i < currentGame.playerHand.cards.length; i++) {
-        var codeImg = /..(?=.jpg)/gi;
+      let x = 0;
+      for (let i = 0; i < currentGame.playerHand.cards.length; i++) {
+        let codeImg = /..(?=.jpg)/gi;
         if(currentGame.playerHand.cards[i].image.match(codeImg)[0] === querystring_card) {
           console.log("Informations de la carte envoyées pour la partie numéro " + currentGame.game_id + ".");
           x += 1;
@@ -274,20 +278,20 @@ app.get("/:serial/cardinformation", function(request, response) {
 
 app.get("/:serial/play", function(request, response) {
   'use strict';
-  var currentGame = games[+request.params.serial - 1];
-  var querystring_card = request.query.card;
+  let currentGame = games[+request.params.serial - 1];
+  let querystring_card = request.query.card;
   if(currentGame.botHand.quantity === 0) {
     console.log("Impossible de jouer, le bot n'a plus de cartes pour la partie numéro " + currentGame.game_id + ".");
     response.end();
   } else {
     let cardFind = 0;
-    for (var i = 0; i < currentGame.playerHand.cards.length; i++) {
-      var codeImg = /..(?=.jpg)/gi;
+    for (let i = 0; i < currentGame.playerHand.cards.length; i++) {
+      let codeImg = /..(?=.jpg)/gi;
       if(currentGame.playerHand.cards[i].image.match(codeImg)[0] === querystring_card && cardFind === 0) {
         cardFind += 1;
         currentGame.cardsPlayed.player = currentGame.playerHand.cards[i];
         currentGame.playerHand.cards.splice(i, 1);
-        var numberRandom = Math.round(Math.random() * (currentGame.botHand.cards.length - 1));
+        let numberRandom = Math.round(Math.random() * (currentGame.botHand.cards.length - 1));
         currentGame.cardsPlayed.bot = currentGame.botHand.cards[numberRandom];
         currentGame.botHand.cards.splice(numberRandom, 1);
         console.log("Le bot a jouer pour la partie numéro " + currentGame.game_id + ".");
@@ -299,8 +303,8 @@ app.get("/:serial/play", function(request, response) {
 
 
 app.get("/:serial/outcome", function(request, response) {
-  var currentGame = games[+request.params.serial - 1];
-  var battleResult = {
+  let currentGame = games[+request.params.serial - 1];
+  let battleResult = {
     result: outcome(currentGame),
     score: {
       player: currentGame.scoreEffect.player.score,
@@ -310,38 +314,41 @@ app.get("/:serial/outcome", function(request, response) {
   };
   console.log("Résultats de la bataille envoyés pour la partie numéro " + currentGame.game_id + ".");
   if(currentGame.deck.length === 0 && currentGame.playerHand.cards.length === 0 && currentGame.botHand.cards.length === 0) {
-    battleResult.nextTurn = "<p>Connaître le gagnant</p>";
+    battleResult.nextTurn = "Connaître le gagnant";
     battleResult.pursue = 0;
     console.log("Fin de la partie numéro " + currentGame.game_id + ".");
   } else {
-    battleResult.nextTurn = "<p>Tour suivant</p>";
+    battleResult.nextTurn = "Tour suivant";
     battleResult.pursue = 1;
   }
   response.send(battleResult);
 });
 
 app.get("/:serial/winner", function(request, response) {
-  var currentGame = games[+request.params.serial - 1];
-  var winOrLoose = "<h1>Vous avez ";
-  var wannareplay = "<p>Voulez-vous rejouer ? </p><p>Oui !</p> <p>Non </p>";
+  let currentGame = games[+request.params.serial - 1];
+  let winOrLoose = "Vous avez ";
+  let wannaReplay = "Voulez-vous rejouer ?";
   if(currentGame.scoreEffect.player.score > currentGame.scoreEffect.bot.score) {
-    winOrLoose += "gagné !!! </h1>";
+    winOrLoose += "gagné !!!";
   } else if (currentGame.scoreEffect.player.score === currentGame.scoreEffect.bot.score) {
-    winOrLoose += "fait égalité !! </h1>";
+    winOrLoose += "fait égalité !!";
   } else {
-    winOrLoose += "perdu ! </h1>";
+    winOrLoose += "perdu !";
   }
-  var finalMessage = winOrLoose + wannareplay;
+  let finalMessage = {
+    winOrLoose, 
+    wannaReplay
+  };
   response.send(finalMessage);
 });
 
 app.get("/:serial/graveyard", function(request, response) {
-  var currentGame = games[+request.params.serial - 1];
+  let currentGame = games[+request.params.serial - 1];
   console.log("Cimetière consulté pour la partie numéro " + currentGame.game_id + ".");
   response.send(currentGame.graveyard);
 });
 
-var port = process.env.PORT || 3000;
+let port = process.env.PORT || 3000;
 
 app.listen(port, function() {
   console.log("Serveur lancé !");

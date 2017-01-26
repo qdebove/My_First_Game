@@ -6,6 +6,10 @@
     text-align: $textAlign;
 }
 
+@mixin backgroundColor($color) {
+    background-color: $color;
+}
+
 %handMargin {
     margin: 25px 15% 50px 15%;
 }
@@ -21,6 +25,10 @@
 %resetPadMar {
     padding: 0;
     margin: 0;
+}
+
+%border {
+    border: 2px solid black;
 }
 
 .mainContent {
@@ -42,14 +50,26 @@
         .pioches {
             background-color: #ffcccc;
             width: 15%;
+            @extend %otherMinHeight;
             @include flex(center, initial, wrap, initial);
 
             figure {
                 background-color: yellow;
+                @extend %border;
                 @extend %otherMinHeight;
                 @include flex(center, center, wrap, center);
 
             }
+
+            .discard {
+                position: fixed;
+                overflow-x: scroll;
+                top: 20%;
+                left: 11%;
+                width: 100%;
+                @extend %otherMinHeight;
+                @include flex(space-between, null, nowrap, null);
+}
         }
 
         .areaOfGame {
@@ -69,6 +89,11 @@
                 width: 40%;
                 margin : 0;
                 font-size: 20px;
+                @extend %border;
+            }
+
+            .playerEffect, .botEffect {
+                @extend %border;
             }
         }    
     }
@@ -85,9 +110,34 @@
   position: fixed;
   left: calc(50% - 113px);
   bottom: calc(50% - 156px);
-  @include flex(space-between, initial, wrap, justify)
+  width: 226px;
+  @extend %border;
+  @include backgroundColor(white);
+}
+
+.description {
+    @extend %border;
+    @include backgroundColor(white);
 }
 
 .hide {
     display: none;
 }
+
+.action {
+    @extend %border;
+    @include flex(space-between, initial, nowrap, initial);
+
+    .disablePreview {
+        border: 1px solid black;
+        @extend %border;
+        @extend %resetPadMar;
+    }
+
+    .play {
+        border: 1px solid black;
+        @extend %border;
+        @extend %resetPadMar;
+    }
+}
+

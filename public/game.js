@@ -1,189 +1,327 @@
-var gameID;
+document.addEventListener("DOMContentLoaded", function (event) {
+  "use strict";
+  const main = document.getElementsByClassName("areaOfGame")[0];
+  const plateau = document.getElementsByClassName("plateau")[0];
+  let gameID = 0;
 
-function playerDraw(gameNumber, number) {
-  $.get("/" + gameNumber + "/playerdraw?quantity=" + number)
-    .then(function(response) {
-      if(response.remaining >= 0) {
-        for (var i = 0; i < response.cards.length; i ++) {
-          $("<img>").attr("src", response.cards[i].image).appendTo(".handplayer");
-          $(".pioche figure:first-child").find("figcaption").replaceWith("<figcaption>Cartes restantes " + response.remaining + ".</figcaption>");
-        }
-      }
-      $(".score h2:first-child").find("p").replaceWith("<p>" + response.effect + "</p>");
-      $(".score h2:nth-child(3)").find("p").replaceWith("<p>" + response.effect + "</p>");
-    });
-}
-
-function botDraw(gameNumber, number) {
-  $.get("/" + gameNumber + "/botdraw?quantity=" + number)
-    .then(function(response) {
-      if(response.remaining >= 0) {
-        for (var i = 0; i < response.cards.length; i ++) {
-          $("<img>").attr("src", "images/verso_carte.png").appendTo(".handbot");
-          $(".pioche figure:first-child").find("figcaption").replaceWith("<figcaption>Cartes restantes " + response.remaining + ".</figcaption>");
-        }
-      }
-      $(".score h2:nth-child(2)").find("p").replaceWith("<p>" + response.effect + "</p>");
-      $(".score h2:last-child").find("p").replaceWith("<p>" + response.effect + "</p>");
-    });
-}
-
-function preview() {
-  $(".handplayer").on("click", "img", function() {
-    var codeImg = $(this).attr("src").match(/..(?=.jpg)/gi);
-    var $index = $(".handplayer").find("img").index(this);
-    var $this = $(".handplayer").find(this);
-    $(".handplayer").find("article").detach();
-    if ($this.hasClass("preview")) {
-        $this.removeClass("preview");
-    } else {
-      $(".handplayer").find("img").removeClass("preview");
-      $this.toggleClass("preview");
-      $.get("/" + gameID + "/cardinformation?card=" + codeImg)
-        .then(function(response) {
-          $(response).toggleClass("preview").appendTo(".handplayer");
-        })
-        .then(function() {
-          play();
-        });
-      }
-    });
-  $(".handplayer").on("click", ".preview p:nth-child(2)", function() {
-      $(".handplayer").find("img").removeClass("preview");
-      $(".handplayer").find("article").detach();
-  });
-}
-
-function play() {
-    $(".handplayer").find("article p:last-child").on("click", function() {
-      var codeImg = $(".handplayer img.preview").attr("src").match(/..(?=.jpg)/gi);
-      var dataCardBot = $(".handbot").find("img:first-child");
-      if ($("main").children().length === 0) {
-          $.get("/" + gameID + "/play?card=" + codeImg)
-              .then(function(response) {
-                if($("img.preview").attr("src") === response.player.image) {
-                  $("article.preview").detach();
-                  $("img.preview").detach();
-                  var imageTagPlayer = $("<img>").attr("src", response.player.image);
-                  var imageTagBot = $("<img>").attr("src", response.bot.image);
-                  imageTagBot.prependTo("main");
-                  imageTagPlayer.appendTo("main");
-                } else {
-                  console.log("Pour la partie numéro " + gameID + ", le serveur a envoyé une mauvaise carte !");
-                }
-              })
-              .then(function() {
-                $(".handbot").find("img:first-child").detach();
-              })
-              .then(function() {
-                $.get("/" + gameID + "/outcome")
-                    .then(function(response) {
-                      $(response.result).appendTo("main");
-                      $(".score h1:first-child").find("p").replaceWith("<p>" + response.score.player + "</p>");
-                      $(".score h1:nth-child(2)").find("p").replaceWith("<p>" + response.score.bot + "</p>");
-                      $(response.nextTurn).appendTo("main");
-                      if(response.nextTurn === "<p>Tour suivant</p>") {
-                        nextTurn();
-                      } else {
-                        endOfGame();
-                      }
-                    });
-              });
-      }
-  });
-}
+  newGame();
 
 
-function nextTurn() {
-    $("main p:last-child").on("click", function() {
-        $("main").children().detach();
-        playerDraw(gameID, 1);
-        botDraw(gameID, 1);
-    });
-}
 
-function endOfGame() {
-    $(".handplayer").off("click", "img");
-    $(".handplayer").off("click", ".preview p:nth-child(2)");
-    $(".pioche figure:nth-child(2)").off("click");
-    $("main p:last-child").on("click", function() {
-        $("main").children().detach();
-        $.get("/" + gameID + "/winner", function(response) {
-          $(response).appendTo("main");
-        })
-          .then(function() {
-            $("main").find("p:nth-child(3)").on("click", function() {
-              letsplay();
-            });
-            $("main").find("p:last-child").on("click", function() {
-              $("main").children().detach();
-              $("<h1>Merci d'avoir joué !! N'hésitez pas à me faire part de vos remarques constructives !</h1>").appendTo("main");
-              $("<a>Cliquez içi pour revenir au menu principal</a>").attr("href", "jeux1.html").appendTo("main");
-            });
+  function newGame() {
+    document.getElementsByClassName("plateau")[0].replaceWith(plateau);
+    document.getElementsByClassName("playerScore")[0].getElementsByTagName("p")[0].innerHTML = "0";
+    document.getElementsByClassName("botScore")[0].getElementsByTagName("p")[0].innerHTML = "0";
+    main.appendChild(createElements("img", null, {
+      name: "src",
+      value: "images/waiting.gif"
+    }, "preview"));
+
+    requests("GET", "http://localhost:3000/newGame")
+
+      .then(response => {
+        main.getElementsByClassName("preview")[0].remove();
+        gameID = response.game_id;
+      })
+      .then(() => {
+        draw("player", gameID, 3);
+      })
+      .then(() => {
+        draw("bot", gameID, 3);
+      })
+      .then(() => {
+        document.getElementsByClassName("cimetiere")[0].getElementsByTagName("p")[0].addEventListener("click", graveyard);
+      })
+  };
+
+  function draw(player, gameNumber, number) {
+
+    requests("GET", `http://localhost:3000/${gameNumber}/${player}draw?quantity=${number}`)
+
+      .then(response => {
+        let hand = document.getElementsByClassName("hand" + player)[0];
+        let pioche = document.getElementsByClassName("pioche")[0].getElementsByTagName("p")[0];
+        let effect = document.getElementsByClassName(`${player}Effect`)[0].getElementsByTagName("p")[0];
+        response.cards.forEach(function (element) {
+          let article = createElements("article", null, null, "card");
+          let image = createElements("img", null, {
+            name: "src",
+            value: element.image
           });
-    });
-}
+          image.addEventListener("click", eventPreviewingOneCard);
 
-function discard() {
-    var $piocheFigureChild2 = $(".pioche figure:nth-child(2)");
-    var $piocheFigureLastChild = ".pioche figure:last-child";
-    $piocheFigureChild2.on("click", function() {
-        $piocheFigureChild2.find("p").detach();
-        if ($($piocheFigureLastChild).hasClass("discard")) {
-            $(".discard").detach();
-            $piocheFigureChild2.append("<p>Cliquez ici pour voir la défausse</p>");
-        } else {
-            $piocheFigureChild2.append("<p>Cliquez ici pour fermer la défausse</p>");
-            $("<figure></figure>").addClass("discard").appendTo(".pioche");
-            $.get("/" + gameID + "/graveyard")
-                .then(function(response) {
-                    var cardsReceived = response.cards;
-                    for (var i = 0; i < cardsReceived.length; i++) {
-                        var currentImage = cardsReceived[i].image;
-                        var imageTag = $("<img>").attr("src", currentImage);
-                        imageTag.appendTo(".pioche figure:last-child");
-                    }
-                });
+          if (player === "player") {
+            article.appendChild(image);
+            hand.appendChild(article);
+          } else {
+            hand.appendChild(createElements("img", null, {
+              name: "src",
+              value: "./images/verso_carte.jpg"
+            }));
+          }
+        }, this);
+        pioche.innerHTML = `Cartes restantes ${response.remaining}`;
+        effect.innerHTML = `${response.effect}`;
+      });
+  }
+
+  function createElements(tag, content, attribute, nameClass = "") {
+    let element = document.createElement(`${tag}`);
+
+    if (content) {
+      element.innerHTML = content;
+    }
+    if (attribute) {
+      element.setAttribute(attribute.name, attribute.value);
+    }
+    element.className = nameClass;
+    return element;
+  }
+
+  function requests(method, url, parse = true) {
+    return new Promise((resolve, reject) => {
+      let xhr = new XMLHttpRequest();
+      xhr.open(method, url);
+      xhr.onload = function () {
+        (this.status >= 200 && this.status < 300) ? resolve(parse ? JSON.parse(xhr.response) : xhr.response): reject({
+          status: this.status,
+          statusText: xhr.statusText
+        });
+      };
+      xhr.onerror = function () {
+        reject({
+          status: this.status,
+          statusText: xhr.statusText
+        });
+      };
+      xhr.send();
+    });
+  }
+
+  function eventPreviewingOneCard() {
+      let that = this;
+      this.parentNode.className = "preview";
+      let hand = document.getElementsByClassName("card");
+      let regexp = this.src.match(/..(?=.jpg)/gi);
+      for (let element of hand) {
+        element.getElementsByTagName("img")[0].removeEventListener("click", eventPreviewingOneCard);
+      }
+      this.removeEventListener("click", eventPreviewingOneCard);
+
+      requests("GET", `http://localhost:3000/${gameID}/cardinformation?card=${regexp}`, true)
+
+        .then(response => {
+          let description = createElements("article", `<p>${response.description}</p><p>${response.power_weakness}</p>`, null, "description");
+          let disablePreview = createElements("p", response.action1, null, "disablePreview");
+          let playCard = createElements("p", response.action2, null, "play");
+          let allAction = createElements("article", null, null, "action");
+          disablePreview.addEventListener("click", eventClosePreviewingOneCard);
+          playCard.addEventListener("click", eventPlayOneCard);
+          allAction.appendChild(disablePreview);
+          allAction.appendChild(playCard);
+          that.parentNode.appendChild(description);
+          that.parentNode.appendChild(allAction);
+        });
+  }
+
+  function eventClosePreviewingOneCard() {
+
+      this.parentNode.parentNode.className = "card";
+      this.removeEventListener("click", eventClosePreviewingOneCard);
+      let handplayer = document.getElementsByClassName("handplayer")[0];
+      let image = handplayer.getElementsByTagName("img");
+      for (let element of image) {
+        element.addEventListener("click", eventPreviewingOneCard);
+      }
+      document.getElementsByClassName("action")[0].remove();
+      document.getElementsByClassName("description")[0].remove();
+    
+  };
+
+  function eventPlayOneCard(target) {
+
+      let regexp = document.getElementsByClassName("preview")[0].getElementsByTagName("img")[0].src.match(/..(?=.jpg)/gi);
+
+      requests("GET", `http://localhost:3000/${gameID}/play?card=${regexp}`, true)
+
+        .then(response => {
+          let cardPlayerPlayed = createElements("img", null, {
+            name: "src",
+            value: response.player.image
+          }, "cardPlayer");
+          let cardBotPlayed = createElements("img", null, {
+            name: "src",
+            value: response.bot.image
+          }, "cardBot");
+          cardPlayerPlayed.className = "played";
+          let areaOfGame = document.getElementsByClassName("areaOfGame")[0];
+          this.parentNode.getElementsByClassName("disablePreview")[0].removeEventListener("click", eventClosePreviewingOneCard);
+          this.removeEventListener("click", eventPlayOneCard);
+          document.getElementsByClassName("preview")[0].remove();
+          areaOfGame.appendChild(cardPlayerPlayed);
+          areaOfGame.insertBefore(cardBotPlayed, document.getElementsByClassName("cardBot")[0]);
+        })
+
+        .then(() => {
+          document.getElementsByClassName("handbot")[0].getElementsByTagName("img")[0].remove();
+        })
+
+        .then(() => {
+          outcome();
+        })
+  };
+
+  function outcome() {
+    let results = {
+      result: "",
+      playerScore: "",
+      botScore: "",
+      nextTurn: ""
+    }
+
+    requests("GET", `http://localhost:3000/${gameID}/outcome`, true)
+
+      .then((response) => {
+        results.result = response.result;
+        results.playerScore = response.score.player;
+        results.botScore = response.score.bot;
+        results.nextTurn = response.nextTurn;
+      })
+
+      .then(() => {
+        let areaOfGame = document.getElementsByClassName("areaOfGame")[0];
+        let article = createElements("article", results.result, null, "description");
+        let next = createElements("p", results.nextTurn, null);
+        next.className = results.nextTurn == "Tour suivant" ? "" : "end";
+        let action = createElements("article", null, null, "description nexTurn");
+        action.appendChild(next);
+        let playerScore = document.getElementsByClassName("playerScore")[0];
+        let newPlayerScore = createElements("p", (results.playerScore == 0) ? "0" : results.playerScore, null);
+        let botScore = document.getElementsByClassName("botScore")[0];
+        let newBotScore = createElements("p", (results.botScore == 0) ? "0" : results.botScore, null);
+        playerScore.replaceChild(newPlayerScore, playerScore.getElementsByTagName("p")[0]);
+        botScore.replaceChild(newBotScore, botScore.getElementsByTagName("p")[0]);
+        areaOfGame.appendChild(article);
+        areaOfGame.appendChild(action);
+      })
+
+      .then(() => {
+        document.getElementsByClassName("nexTurn")[0].childNodes[0].addEventListener("click", function () {nextTurn((results.nextTurn == "Tour suivant") ? true : false)});
+      })
+  };
+
+  function nextTurn(next) {
+
+      document.getElementsByClassName("nexTurn")[0].removeEventListener("click", nextTurn);
+      let hand = document.getElementsByClassName("handplayer")[0].getElementsByClassName("card");
+      for (let element of hand) {
+        element.getElementsByTagName("img")[0].addEventListener("click", eventPreviewingOneCard);
+      }
+      let children = document.getElementsByClassName("areaOfGame")[0].childNodes.length;
+        for (let i = 0; i < children; i++) {
+          document.getElementsByClassName("areaOfGame")[0].childNodes[0].remove();
         }
-    });
-}
+      if (next) {
+        draw("player", gameID, 1);
+        draw("bot", gameID, 1);
+      } else {
+        endOfGame();
+      }
+  }
+  
+  function graveyard() {
+    let cimetiere = document.getElementsByClassName("cimetiere")[0].getElementsByTagName("p")[0];
+    let discard = document.getElementsByClassName("discard");
+    if(document.getElementsByClassName("preview").length == 0) {
+      if(discard.length != 0) {
+        cimetiere.innerHTML = "Cliquez ici pour voir la défausse";
+        discard[0].remove();
+      } else {
+        cimetiere.innerHTML = "Cliquez ici pour fermer la défausse";
 
-function initialize() {
-    $("<img>").attr("src", "images/waiting.gif").toggleClass("preview").appendTo("main");
-    $.get("/newGame")
-        .then(function(response) {
-          var $piocheFigure = ".pioche figure";
-          $($piocheFigure + ":first-child").find("figcaption").detach();
-          $($piocheFigure + ":first-child").append("<figcaption>Cartes restantes " + response.remaining + ".</figcaption>");
-          $("main").children().detach();
-          $($piocheFigure).find("p").detach();
-          $($piocheFigure + ":last-child").append("<p>Cliquez ici pour voir la défausse</p>");
-          $(".score h1").children().detach();
-          $(".score h2").children().detach();
-          $(".handplayer").children().detach();
-          $(".handbot").children().detach();
-          $(".score h1:first-child").append("<p>" + response.scoreEffect.player.score + "</p>");
-          $(".score h1:nth-child(2)").append("<p>" + response.scoreEffect.bot.score + "</p>");
-          $(".score h2:nth-child(3)").append("<p>" + response.scoreEffect.player.effect + "</p>");
-          $(".score h2:last-child").append("<p>" + response.scoreEffect.bot.effect + "</p>");
-          $("main").children().detach();
-          gameID = response.game_id;
-        })
-        .then(function() {
-          playerDraw(gameID, 3);
-        })
-        .then(function() {
-          botDraw(gameID, 3);
-        })
-        .then(preview());
-}
+        requests("GET", `http://localhost:3000/${gameID}/graveyard`)
 
-function letsplay() {
-  $(document).ready(function() {
-    'use strict';
-    initialize();
-    discard();
-  });
-}
+        .then((response) => {
+          let figure = createElements("article", null, null, "discard");
+          for (let i = 0; i < response.cards.length; i++) {
+            figure.appendChild(createElements("img", null, {
+              name: "src",
+              value: response.cards[i].image
+            }));
+          }
+          document.getElementsByClassName("cimetiere")[0].appendChild(figure);
+        })
+      }
+    }
+  }
 
-letsplay();
+  function endOfGame() {
+    let plateau = document.getElementsByClassName("areaOfGame")[0];
+    document.getElementsByClassName("cimetiere")[0].getElementsByTagName("p")[0].removeEventListener("click", graveyard);
+
+    requests("GET", `http://localhost:3000/${gameID}/winner`)
+
+    .then((response) => {
+      let h1 = createElements("h1", response.winOrLoose, null);
+      let replay = createElements("p", response.wannaReplay, null);
+      let yesOption = createElements("p", "Oui", null);
+      let noOption = createElements("p", "Non", null);
+      yesOption.addEventListener("click", nextGame);
+      noOption.addEventListener("click", theEnd)
+      plateau.appendChild(h1);
+      plateau.appendChild(replay);
+      plateau.appendChild(yesOption);
+      plateau.appendChild(noOption);
+    })
+  }
+
+  function nextGame() {
+    this.removeEventListener("click", nextGame);
+    for(let i = 0; i < 4; i++) {
+      document.getElementsByClassName("areaOfGame")[0].children[0].remove();
+    }
+    newGame();
+  }
+
+  function theEnd() {
+    this.removeEventListener("click", theEnd);
+    for(let i = 0; i < 4; i++) {
+      document.getElementsByClassName("areaOfGame")[0].children[0].remove();
+    }
+    let thanksMessage = createElements("h1", "Merci d'avoir joué !! N'hésitez pas à me faire part de vos remarques constructives !", null);
+    document.getElementsByClassName("areaOfGame")[0].appendChild(thanksMessage);
+  }
+});
+
+
+// function endOfGame() {
+//     $(".handplayer").off("click", "img");
+//     $(".handplayer").off("click", ".preview p:nth-child(2)");
+//     $(".pioche figure:nth-child(2)").off("click");
+//     $("main p:last-child").on("click", function() {
+//         $("main").children().detach();
+//         $.get("/" + gameID + "/winner", function(response) {
+//           $(response).appendTo("main");
+//         })
+//           .then(function() {
+//             $("main").find("p:nth-child(3)").on("click", function() {
+//               letsplay();
+//             });
+//             $("main").find("p:last-child").on("click", function() {
+//               $("main").children().detach();
+//               $("<h1>Merci d'avoir joué !! N'hésitez pas à me faire part de vos remarques constructives !</h1>").appendTo("main");
+//               $("<a>Cliquez içi pour revenir au menu principal</a>").attr("href", "jeux1.html").appendTo("main");
+//             });
+//           });
+//     });
+// }
+
+// function letsplay() {
+//   $(document).ready(function() {
+//     'use strict';
+//     initialize();
+//     discard();
+//   });
+// }
+
+// letsplay();

@@ -4,12 +4,15 @@
 .mainContent .plateau, .mainContent .plateau .areaOfGame, .mainContent .plateau .scoreAndEffect {
   min-height: 60vh; }
 
-.mainContent .handbot, .mainContent .plateau .pioches figure, .mainContent .handplayer {
+.mainContent .handbot, .mainContent .plateau .pioches, .mainContent .plateau .pioches figure, .mainContent .plateau .pioches .discard, .mainContent .handplayer {
   min-height: 15vh; }
 
-.mainContent {
+.mainContent, .action .disablePreview, .action .play {
   padding: 0;
   margin: 0; }
+
+.mainContent .plateau .pioches figure, .mainContent .plateau .scoreAndEffect .playerScore, .mainContent .plateau .scoreAndEffect .botScore, .mainContent .plateau .scoreAndEffect .playerEffect, .mainContent .plateau .scoreAndEffect .botEffect, .preview, .description, .action, .action .disablePreview, .action .play {
+  border: 2px solid black; }
 
 .mainContent {
   box-sizing: border-box;
@@ -42,6 +45,15 @@
         align-items: center;
         flex-wrap: wrap;
         text-align: center; }
+      .mainContent .plateau .pioches .discard {
+        position: fixed;
+        overflow-x: scroll;
+        top: 20%;
+        left: 11%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: nowrap; }
     .mainContent .plateau .areaOfGame {
       background-color: red;
       width: 70%;
@@ -74,13 +86,24 @@
   position: fixed;
   left: calc(50% - 113px);
   bottom: calc(50% - 156px);
-  display: flex;
-  justify-content: space-between;
-  align-items: initial;
-  flex-wrap: wrap;
-  text-align: justify; }
+  width: 226px;
+  background-color: white; }
+
+.description {
+  background-color: white; }
 
 .hide {
   display: none; }
+
+.action {
+  display: flex;
+  justify-content: space-between;
+  align-items: initial;
+  flex-wrap: nowrap;
+  text-align: initial; }
+  .action .disablePreview {
+    border: 1px solid black; }
+  .action .play {
+    border: 1px solid black; }
 
 /*# sourceMappingURL=style.css.map */
