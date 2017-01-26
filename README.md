@@ -1,10 +1,12 @@
 ** Sorry, English is not my native language **
 
+NEWS : Now, the client side is jQuery free, so VanillaJS will not worked on all browser (for example, see http://caniuse.com/#search=event for event...);
+
 # My First Game
 
 ## I. Introduction
 
-My first game, created without any refactoring. Using jQuery and old JS without good graphics !
+My first game, created without any refactoring. Using jQuery and old JS without good graphics ! --> Not now ^^
 
 ## II. Biography
 
@@ -97,10 +99,14 @@ URL's are :
 * For PvP => http://another-mirai.herokuapp.com/
 * For PvE => http://another-mirai-pve.herokuapp.com/
 
-For the future, I'll work on socket.io and delete all jQuery's code.
+For the future, I'll work on socket.io and refactoring my api (my code is awfull);
 Of course, I'll post my future website with the different release note.
 
-## VI Thanks
+## VI version
+
+No versioning is used, so I'll say that this is the 2.0 of this game, but the online games are not using this version.
+
+## VII Thanks
 
 Many thanks to my "mentor", Ludovic Lafole.
 
