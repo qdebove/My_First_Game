@@ -292,36 +292,3 @@ document.addEventListener("DOMContentLoaded", function (event) {
     document.getElementsByClassName("areaOfGame")[0].appendChild(thanksMessage);
   }
 });
-
-
-// function endOfGame() {
-//     $(".handplayer").off("click", "img");
-//     $(".handplayer").off("click", ".preview p:nth-child(2)");
-//     $(".pioche figure:nth-child(2)").off("click");
-//     $("main p:last-child").on("click", function() {
-//         $("main").children().detach();
-//         $.get("/" + gameID + "/winner", function(response) {
-//           $(response).appendTo("main");
-//         })
-//           .then(function() {
-//             $("main").find("p:nth-child(3)").on("click", function() {
-//               letsplay();
-//             });
-//             $("main").find("p:last-child").on("click", function() {
-//               $("main").children().detach();
-//               $("<h1>Merci d'avoir joué !! N'hésitez pas à me faire part de vos remarques constructives !</h1>").appendTo("main");
-//               $("<a>Cliquez içi pour revenir au menu principal</a>").attr("href", "jeux1.html").appendTo("main");
-//             });
-//           });
-//     });
-// }
-
-// function letsplay() {
-//   $(document).ready(function() {
-//     'use strict';
-//     initialize();
-//     discard();
-//   });
-// }
-
-// letsplay();
