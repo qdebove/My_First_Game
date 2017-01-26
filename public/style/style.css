@@ -1,0 +1,86 @@
+.mainContent .handbot, .mainContent .handplayer {
+  margin: 25px 15% 50px 15%; }
+
+.mainContent .plateau, .mainContent .plateau .areaOfGame, .mainContent .plateau .scoreAndEffect {
+  min-height: 60vh; }
+
+.mainContent .handbot, .mainContent .plateau .pioches figure, .mainContent .handplayer {
+  min-height: 15vh; }
+
+.mainContent {
+  padding: 0;
+  margin: 0; }
+
+.mainContent {
+  box-sizing: border-box;
+  max-width: 1680px; }
+  .mainContent .handbot {
+    background-color: blue;
+    display: flex;
+    justify-content: space-between;
+    align-items: initial;
+    flex-wrap: nowrap;
+    text-align: initial; }
+  .mainContent .plateau {
+    display: flex;
+    justify-content: space-between;
+    align-items: initial;
+    flex-wrap: nowrap;
+    text-align: initial; }
+    .mainContent .plateau .pioches {
+      background-color: #ffcccc;
+      width: 15%;
+      display: flex;
+      justify-content: center;
+      align-items: initial;
+      flex-wrap: wrap;
+      text-align: initial; }
+      .mainContent .plateau .pioches figure {
+        background-color: yellow;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        text-align: center; }
+    .mainContent .plateau .areaOfGame {
+      background-color: red;
+      width: 70%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      text-align: initial; }
+    .mainContent .plateau .scoreAndEffect {
+      background-color: #cc3300;
+      width: 15%;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      text-align: center; }
+      .mainContent .plateau .scoreAndEffect .playerScore, .mainContent .plateau .scoreAndEffect .botScore {
+        width: 40%;
+        margin: 0;
+        font-size: 20px; }
+  .mainContent .handplayer {
+    background-color: blue;
+    display: flex;
+    justify-content: space-between;
+    align-items: initial;
+    flex-wrap: nowrap;
+    text-align: initial; }
+
+.preview {
+  position: fixed;
+  left: calc(50% - 113px);
+  bottom: calc(50% - 156px);
+  display: flex;
+  justify-content: space-between;
+  align-items: initial;
+  flex-wrap: wrap;
+  text-align: justify; }
+
+.hide {
+  display: none; }
+
+/*# sourceMappingURL=style.css.map */
