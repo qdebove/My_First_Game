@@ -1,6 +1,7 @@
 ** Sorry, English is not my native language **
 
 NEWS : Now, the client side is jQuery free, so VanillaJS will not worked on all browser (for example, see http://caniuse.com/#search=event for event...).
+26/03/17 NEWS bis : Server side refactored thanks to typescript (and so POO). 
 
 # My First Game
 
@@ -99,8 +100,7 @@ URL's are :
 * For PvP => http://another-mirai.herokuapp.com/
 * For PvE => http://another-mirai-pve.herokuapp.com/
 
-For the future, I'll work on socket.io and refactoring my api (my code is awfull);
-Of course, I'll post my future website with the different release note.
+Next task : socket.io for multi-player (the actual PvP is using awfull pollying and all inconvenients...).
 
 ## VI version
 
