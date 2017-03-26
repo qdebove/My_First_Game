@@ -1,12 +1,13 @@
-document.addEventListener("DOMContentLoaded", function (event) {
+document.addEventListener("DOMContentLoaded", function () {
   "use strict";
+
   const main = document.getElementsByClassName("areaOfGame")[0];
   const plateau = document.getElementsByClassName("plateau")[0];
+  let playerHand = [];
   let gameID = 0;
+  let pursue = 1;
 
   newGame();
-
-
 
   function newGame() {
     document.getElementsByClassName("plateau")[0].replaceWith(plateau);
@@ -17,51 +18,60 @@ document.addEventListener("DOMContentLoaded", function (event) {
       value: "images/waiting.gif"
     }, "preview"));
 
-    requests("GET", "http://localhost:3000/newGame")
+    requests("POST", "http://localhost:3000/game/new", null)
 
       .then(response => {
         main.getElementsByClassName("preview")[0].remove();
         gameID = response.game_id;
       })
       .then(() => {
-        draw("player", gameID, 3);
-      })
-      .then(() => {
-        draw("bot", gameID, 3);
+        draw(3);
       })
       .then(() => {
         document.getElementsByClassName("cimetiere")[0].getElementsByTagName("p")[0].addEventListener("click", graveyard);
       })
-  };
+  }
 
-  function draw(player, gameNumber, number) {
+  function draw(number) {
+      let jsonBody = JSON.stringify(
+          {
+              "quantity": number
+          }
 
-    requests("GET", `http://localhost:3000/${gameNumber}/${player}draw?quantity=${number}`)
+      );
+
+    requests("POST", `http://localhost:3000/game/${gameID}/draw`, jsonBody)
 
       .then(response => {
-        let hand = document.getElementsByClassName("hand" + player)[0];
+        let handPlayer = document.getElementsByClassName("handplayer")[0];
+        let handBot = document.getElementsByClassName("handbot")[0];
         let pioche = document.getElementsByClassName("pioche")[0].getElementsByTagName("p")[0];
-        let effect = document.getElementsByClassName(`${player}Effect`)[0].getElementsByTagName("p")[0];
+        let effectPlayer = document.getElementsByClassName("playerEffect")[0].getElementsByTagName("p")[0];
+        let effectBot = document.getElementsByClassName("botEffect")[0].getElementsByTagName("p")[0];
         response.cards.forEach(function (element) {
           let article = createElements("article", null, null, "card");
           let image = createElements("img", null, {
             name: "src",
             value: element.image
           });
-          image.addEventListener("click", eventPreviewingOneCard);
-
-          if (player === "player") {
-            article.appendChild(image);
-            hand.appendChild(article);
-          } else {
-            hand.appendChild(createElements("img", null, {
+          image.id = element.code;
+          article.appendChild(image);
+          handPlayer.appendChild(article);
+          handBot.appendChild(createElements("img", null, {
               name: "src",
               value: "./images/verso_carte.jpg"
             }));
-          }
+          image.addEventListener("click", eventPreviewingOneCard, false);
+          playerHand.push(
+                {
+                    "cardDescription": element.cardDescription,
+                    "hashCode": element.code
+                }
+            );
         }, this);
         pioche.innerHTML = `Cartes restantes ${response.remaining}`;
-        effect.innerHTML = `${response.effect}`;
+        effectPlayer.innerHTML = response.player;
+        effectBot.innerHTML = response.bot;
       });
   }
 
@@ -78,10 +88,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
     return element;
   }
 
-  function requests(method, url, parse = true) {
+  function requests(method, url, body, parse = true) {
     return new Promise((resolve, reject) => {
       let xhr = new XMLHttpRequest();
       xhr.open(method, url);
+      xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
       xhr.onload = function () {
         (this.status >= 200 && this.status < 300) ? resolve(parse ? JSON.parse(xhr.response) : xhr.response): reject({
           status: this.status,
@@ -94,55 +105,53 @@ document.addEventListener("DOMContentLoaded", function (event) {
           statusText: xhr.statusText
         });
       };
-      xhr.send();
+      body == null ? xhr.send() : xhr.send(body);
     });
   }
 
   function eventPreviewingOneCard() {
-      let that = this;
-      this.parentNode.className = "preview";
-      let hand = document.getElementsByClassName("card");
-      let regexp = this.src.match(/..(?=.jpg)/gi);
-      for (let element of hand) {
-        element.getElementsByTagName("img")[0].removeEventListener("click", eventPreviewingOneCard);
-      }
-      this.removeEventListener("click", eventPreviewingOneCard);
-
-      requests("GET", `http://localhost:3000/${gameID}/cardinformation?card=${regexp}`, true)
-
-        .then(response => {
-          let description = createElements("article", `<p>${response.description}</p><p>${response.power_weakness}</p>`, null, "description");
-          let disablePreview = createElements("p", response.action1, null, "disablePreview");
-          let playCard = createElements("p", response.action2, null, "play");
+      let preview = document.getElementsByClassName("preview");
+      if(preview.length == 0) {
+          this.parentNode.className = "preview";
+          let hand = document.getElementsByClassName("card");
+          let currentDescription;
+          for (let element of playerHand) {
+              if (element.hashCode == this.id) {
+                  currentDescription = element.cardDescription;
+              }
+          }
+          let description = createElements("article", `<p>${currentDescription.description}</p><p>${currentDescription.power_weakness}</p>`, null, "description");
+          let disablePreview = createElements("p", currentDescription.action1, null, "disablePreview");
+          let playCard = createElements("p", currentDescription.action2, null, "play");
           let allAction = createElements("article", null, null, "action");
           disablePreview.addEventListener("click", eventClosePreviewingOneCard);
           playCard.addEventListener("click", eventPlayOneCard);
           allAction.appendChild(disablePreview);
           allAction.appendChild(playCard);
-          that.parentNode.appendChild(description);
-          that.parentNode.appendChild(allAction);
-        });
+          this.parentNode.appendChild(description);
+          this.parentNode.appendChild(allAction);
+      }
   }
 
   function eventClosePreviewingOneCard() {
 
       this.parentNode.parentNode.className = "card";
       this.removeEventListener("click", eventClosePreviewingOneCard);
-      let handplayer = document.getElementsByClassName("handplayer")[0];
-      let image = handplayer.getElementsByTagName("img");
-      for (let element of image) {
-        element.addEventListener("click", eventPreviewingOneCard);
-      }
       document.getElementsByClassName("action")[0].remove();
       document.getElementsByClassName("description")[0].remove();
-    
-  };
+  }
 
-  function eventPlayOneCard(target) {
+  function eventPlayOneCard() {
 
-      let regexp = document.getElementsByClassName("preview")[0].getElementsByTagName("img")[0].src.match(/..(?=.jpg)/gi);
+      let cardCode = document.getElementsByClassName("preview")[0].getElementsByTagName("img")[0].id;
+      let jsonBody = JSON.stringify(
+          {
+              "hashCode": cardCode
+          }
 
-      requests("GET", `http://localhost:3000/${gameID}/play?card=${regexp}`, true)
+      );
+
+      requests("POST", `http://localhost:3000/game/${gameID}/play`, jsonBody, true)
 
         .then(response => {
           let cardPlayerPlayed = createElements("img", null, {
@@ -167,9 +176,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
         })
 
         .then(() => {
+          let cardsArticle = document.getElementsByClassName("card");
+          for(let article of cardsArticle) {
+              let currentArticle = article.getElementsByTagName("img");
+              currentArticle[0].removeEventListener("click", eventPreviewingOneCard);
+          }
+        })
+
+        .then(() => {
           outcome();
         })
-  };
+  }
 
   function outcome() {
     let results = {
@@ -177,15 +194,16 @@ document.addEventListener("DOMContentLoaded", function (event) {
       playerScore: "",
       botScore: "",
       nextTurn: ""
-    }
+    };
 
-    requests("GET", `http://localhost:3000/${gameID}/outcome`, true)
+    requests("POST", `http://localhost:3000/game/${gameID}/outcome`, null, true)
 
       .then((response) => {
         results.result = response.result;
         results.playerScore = response.score.player;
         results.botScore = response.score.bot;
         results.nextTurn = response.nextTurn;
+        pursue = response.pursue;
       })
 
       .then(() => {
@@ -206,11 +224,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
       })
 
       .then(() => {
-        document.getElementsByClassName("nexTurn")[0].childNodes[0].addEventListener("click", function () {nextTurn((results.nextTurn == "Tour suivant") ? true : false)});
+        document.getElementsByClassName("nexTurn")[0].childNodes[0].addEventListener("click", nextTurn);
       })
-  };
+  }
 
-  function nextTurn(next) {
+  function nextTurn() {
 
       document.getElementsByClassName("nexTurn")[0].removeEventListener("click", nextTurn);
       let hand = document.getElementsByClassName("handplayer")[0].getElementsByClassName("card");
@@ -221,9 +239,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
         for (let i = 0; i < children; i++) {
           document.getElementsByClassName("areaOfGame")[0].childNodes[0].remove();
         }
-      if (next) {
-        draw("player", gameID, 1);
-        draw("bot", gameID, 1);
+      if (pursue == 1) {
+        draw(1);
       } else {
         endOfGame();
       }
@@ -239,7 +256,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
       } else {
         cimetiere.innerHTML = "Cliquez ici pour fermer la défausse";
 
-        requests("GET", `http://localhost:3000/${gameID}/graveyard`)
+        requests("POST", `http://localhost:3000/game/${gameID}/graveyard`)
 
         .then((response) => {
           let figure = createElements("article", null, null, "discard");
@@ -259,7 +276,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     let plateau = document.getElementsByClassName("areaOfGame")[0];
     document.getElementsByClassName("cimetiere")[0].getElementsByTagName("p")[0].removeEventListener("click", graveyard);
 
-    requests("GET", `http://localhost:3000/${gameID}/winner`)
+    requests("POST", `http://localhost:3000/game/${gameID}/winner`)
 
     .then((response) => {
       let h1 = createElements("h1", response.winOrLoose, null);
@@ -267,12 +284,12 @@ document.addEventListener("DOMContentLoaded", function (event) {
       let yesOption = createElements("p", "Oui", null);
       let noOption = createElements("p", "Non", null);
       yesOption.addEventListener("click", nextGame);
-      noOption.addEventListener("click", theEnd)
+      noOption.addEventListener("click", theEnd);
       plateau.appendChild(h1);
       plateau.appendChild(replay);
       plateau.appendChild(yesOption);
       plateau.appendChild(noOption);
-    })
+    });
   }
 
   function nextGame() {

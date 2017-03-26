@@ -1,18 +1,19 @@
-module.exports = function shuffle(array) {
+"use strict";
+exports.shuffle = function shuffle(array) {
     'use strict';
-    var i = array.length;
-    var mixed = [];
+    let temporaryArray = new Array();
+    for (let card of array) {
+        temporaryArray.push(card);
+    }
+    let finalArray = new Set();
+    let i = temporaryArray.length;
+    let mixed = new Set();
     while (i !== 0) {
-        var x = Math.round(Math.random() * (i - 1));
-        mixed.push(array[x]);
-        array.splice(x, 1);
+        let x = Math.round(Math.random() * (i - 1));
+        finalArray.add(temporaryArray[x]);
+        temporaryArray.splice(x, 1);
         i--;
     }
-    var j = mixed.length;
-    while (j !== 0) {
-        var y = Math.round(Math.random() * (j - 1));
-        array.push(mixed[y]);
-        mixed.splice(y, 1);
-        j--;
-    }
+    return finalArray;
 };
+//# sourceMappingURL=shuffleArray.js.map
